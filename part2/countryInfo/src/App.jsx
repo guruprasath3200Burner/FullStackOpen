@@ -23,6 +23,14 @@ function App() {
     country.name.common.toLowerCase().includes(countryName.toLowerCase())
   );
 
+  const showCountryHandler = (cca3) => {
+    const selectedCountry = countries.find((country) => country.cca3 === cca3);
+    if (selectedCountry) {
+      setCountryName(selectedCountry.name.common);
+    }
+    // Fetch the details of the selected country using its cca3 code
+  };
+
   return (
     <>
       <div>
@@ -35,13 +43,14 @@ function App() {
         <CountryList
           filteredCountries={filteredCountries}
           countryName={countryName}
+          showCountryHandler={showCountryHandler}
         />
       </div>
     </>
   );
 }
 
-function CountryList({ filteredCountries, countryName }) {
+function CountryList({ filteredCountries, countryName, showCountryHandler }) {
   if (filteredCountries.length === 0 && countryName) {
     return <p>No countries found</p>;
   }
@@ -52,7 +61,12 @@ function CountryList({ filteredCountries, countryName }) {
     return (
       <ul>
         {filteredCountries.map((country) => (
-          <li key={country.cca3}>{country.name.common}</li>
+          <li key={country.cca3}>
+            {country.name.common}{" "}
+            <button onClick={() => showCountryHandler(country.cca3)}>
+              show
+            </button>
+          </li>
         ))}
       </ul>
     );
@@ -76,10 +90,40 @@ function CountryList({ filteredCountries, countryName }) {
           alt={`Flag of ${country.name.common}`}
           style={{ width: "150px", height: "auto" }}
         />
+
+        <WeatherInfo country={country} />
       </div>
     );
   }
   return null;
 }
+
+const WeatherInfo = ({ country }) => {
+  const [weather, setWeather] = useState(null);
+  useEffect(() => {
+    if (country) {
+      const { latlng } = country;
+      if (latlng && latlng.length === 2) {
+        const [lat, lon] = latlng;
+        CountryService.getWeather(lat, lon)
+          .then((data) => {
+            setWeather(data);
+          })
+          .catch((error) => {
+            console.error("Error fetching weather data:", error);
+          });
+      }
+    }
+  }, [country]);
+
+  return (
+    <>
+      <h3>Weather in {country.name.common}</h3>
+
+      <p>Temperature: {weather?.current_weather?.temperature}°C</p>
+      <p>Wind: {weather?.current_weather?.windspeed} m/s</p>
+    </>
+  );
+};
 
 export default App;
