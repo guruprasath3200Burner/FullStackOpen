@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+
+import personService from "./services/persons.js";
 
 import Persons from "./components/Persons.jsx";
 import Filter from "./components/Filter.jsx";
@@ -12,7 +13,7 @@ const App = () => {
   const [filter, setFilter] = useState("");
 
   useEffect(() => {
-    axios.get("http://localhost:3001/persons").then((response) => {
+    personService.getAll().then((response) => {
       setPersons(response.data);
     });
   }, []);
@@ -23,10 +24,31 @@ const App = () => {
   const onSubmit = (event) => {
     event.preventDefault();
     if (persons.some((person) => person.name === newName)) {
-      alert(`${newName} is already added to phonebook`);
+      if (
+        !window.confirm(
+          `${newName} is already added to phonebook, replace the old number with a new one?`
+        )
+      ) {
+        return;
+      }
+      const person = persons.find((person) => person.name === newName);
+      personService
+        .update(person.id, { ...person, number: newNumber })
+        .then((response) => {
+          setPersons(
+            persons.map((p) => (p.id !== person.id ? p : response.data))
+          );
+        });
+      setNewName("");
+      setNewNumber("");
+
       return;
     }
-    setPersons(persons.concat({ name: newName, number: newNumber }));
+    personService
+      .create({ name: newName, number: newNumber })
+      .then((response) => {
+        setPersons(persons.concat(response.data));
+      });
     setNewName("");
     setNewNumber("");
   };
@@ -36,6 +58,14 @@ const App = () => {
 
   const onNumberChange = (event) => {
     setNewNumber(event.target.value);
+  };
+
+  const onDeletePerson = (id) => {
+    if (window.confirm("Are you sure you want to delete this person?")) {
+      personService.delete(id).then(() => {
+        setPersons(persons.filter((person) => person.id !== id));
+      });
+    }
   };
 
   const filteredPersons = filter
@@ -59,7 +89,7 @@ const App = () => {
       <h2>Numbers</h2>
       <ul>
         {filteredPersons.length > 0 ? (
-          <Persons persons={filteredPersons} />
+          <Persons persons={filteredPersons} onDeletePerson={onDeletePerson} />
         ) : (
           <>No numbers with filter {filter}</>
         )}
