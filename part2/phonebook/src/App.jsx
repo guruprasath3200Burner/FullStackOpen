@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-
+import "./App.css";
 import personService from "./services/persons.js";
 
 import Persons from "./components/Persons.jsx";
@@ -11,6 +11,11 @@ const App = () => {
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
   const [filter, setFilter] = useState("");
+
+  const [errorMessage, setErrorMessage] = useState({
+    msg: null,
+    type: "error",
+  });
 
   useEffect(() => {
     personService.getAll().then((response) => {
@@ -38,7 +43,25 @@ const App = () => {
           setPersons(
             persons.map((p) => (p.id !== person.id ? p : response.data))
           );
+          setErrorMessage({
+            msg: `Updated ${newName}`,
+            type: "success",
+          });
+          setTimeout(() => {
+            setErrorMessage({ msg: null, type: "error" });
+          }, 3000);
+        })
+        .catch((error) => {
+          setErrorMessage({
+            msg: `Information of ${newName} has already been removed from server`,
+            type: "error",
+          });
+          setTimeout(() => {
+            setErrorMessage({ msg: null, type: "error" });
+          }, 5000);
+          setPersons(persons.filter((p) => p.id !== person.id));
         });
+
       setNewName("");
       setNewNumber("");
 
@@ -48,6 +71,10 @@ const App = () => {
       .create({ name: newName, number: newNumber })
       .then((response) => {
         setPersons(persons.concat(response.data));
+        setErrorMessage({
+          msg: `Added ${newName}`,
+          type: "success",
+        });
       });
     setNewName("");
     setNewNumber("");
@@ -62,9 +89,23 @@ const App = () => {
 
   const onDeletePerson = (id) => {
     if (window.confirm("Are you sure you want to delete this person?")) {
-      personService.delete(id).then(() => {
-        setPersons(persons.filter((person) => person.id !== id));
-      });
+      personService
+        .delete(id)
+        .then(() => {
+          setPersons(persons.filter((person) => person.id !== id));
+        })
+        .catch((error) => {
+          setErrorMessage({
+            msg: `Information of the person has already been removed from server`,
+            type: "error",
+          });
+          personService.getAll().then((response) => {
+            setPersons(response.data);
+          });
+          setTimeout(() => {
+            setErrorMessage({ msg: null, type: "error" });
+          }, 5000);
+        });
     }
   };
 
@@ -76,6 +117,7 @@ const App = () => {
 
   return (
     <div>
+      <Notification msg={errorMessage.msg} type={errorMessage.type} />
       <h2>Phonebook</h2>
       <Filter filter={filter} OnFilterChange={onFilterChange} />
       <h3>Add a new</h3>
@@ -95,6 +137,41 @@ const App = () => {
         )}
       </ul>
     </div>
+  );
+};
+
+const Notification = ({ msg, type }) => {
+  if (!msg) {
+    return null;
+  }
+
+  const successStyle = {
+    color: "green",
+    background: "lightgrey",
+    fontSize: 20,
+    borderStyle: "solid",
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 10,
+  };
+
+  const errorStyle = {
+    color: "red",
+    background: "lightgrey",
+    fontSize: 20,
+    borderStyle: "solid",
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 10,
+  };
+  return (
+    <>
+      {type === "success" ? (
+        <div style={successStyle}>{msg}</div>
+      ) : (
+        <div style={errorStyle}>{msg}</div>
+      )}
+    </>
   );
 };
 
