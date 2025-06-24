@@ -6,7 +6,6 @@ if (process.argv.length < 3) {
 }
 
 if (process.argv.length == 3) {
-  const password = process.argv[2];
   const url = `mongodb+srv://Guru:${password}@phonebook-backend.unj6q7z.mongodb.net/phonebook?retryWrites=true&w=majority&appName=PhoneBook-Backend`;
 
   mongoose.connect(url);
@@ -35,11 +34,7 @@ if (process.argv.length == 3) {
   const url = `mongodb+srv://Guru:${password}@phonebook-backend.unj6q7z.mongodb.net/phonebook?retryWrites=true&w=majority&appName=PhoneBook-Backend`;
 
   mongoose.connect(url);
-  const entrySchema = new mongoose.Schema({
-    id: String,
-    content: String,
-    number: String,
-  });
+
   const Entry = mongoose.model("Entry", entrySchema);
   const entry = new Entry({
     id: generatedId(),
