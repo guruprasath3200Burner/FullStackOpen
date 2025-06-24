@@ -13,8 +13,21 @@ mongoose
   });
 const entrySchema = new mongoose.Schema({
   id: String,
-  name: String,
-  number: String,
+  name: {
+    type: String,
+    required: true,
+    minlength: 3,
+  },
+  number: {
+    type: String,
+    required: true,
+    minLength: 8,
+    validate: {
+      validator: (v) => {
+        return /\d{2,3}-\d+/.test(v) || /\d{8,}/.test(v);
+      },
+    },
+  },
 });
 
 entrySchema.set("toJSON", {

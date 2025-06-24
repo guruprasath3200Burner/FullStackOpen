@@ -1,7 +1,7 @@
 const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
-const mongoose = require("mongoose");
+// const mongoose = require("mongoose"); // Removed unused import
 const app = express();
 require("dotenv").config();
 const Entry = require("./models/persons");
@@ -9,7 +9,7 @@ const Entry = require("./models/persons");
 app.use(express.static("dist"));
 app.use(cors());
 app.use(express.json());
-morgan.token("body", function (req, res) {
+morgan.token("body", function (req) {
   return JSON.stringify(req.body);
 });
 app.use(
@@ -20,7 +20,7 @@ app.get("/", (_request, response) => {
   response.send("Hello World");
 });
 
-app.get("/api/persons", (_request, response) => {
+app.get("/api/persons", (_request, response, next) => {
   Entry.find({})
     .then((result) => {
       response.json(result);
@@ -30,7 +30,7 @@ app.get("/api/persons", (_request, response) => {
     });
 });
 
-app.post("/api/persons", (request, response) => {
+app.post("/api/persons", (request, response, next) => {
   const body = request.body;
 
   if (!body.name || !body.number) {
@@ -41,9 +41,12 @@ app.post("/api/persons", (request, response) => {
     id: (Math.random() * 10000).toFixed(0),
   });
 
-  entry.save().then((result) => {
-    response.status(201).json(result);
-  });
+  entry
+    .save()
+    .then((result) => {
+      response.status(201).json(result);
+    })
+    .catch((error) => next(error));
 });
 
 app.get("/api/persons/:id", (request, response, next) => {
@@ -62,7 +65,7 @@ app.get("/api/persons/:id", (request, response, next) => {
     });
 });
 
-app.delete("/api/persons/:id", (request, response) => {
+app.delete("/api/persons/:id", (request, response, next) => {
   const id = request.params.id;
   Entry.findByIdAndDelete(id)
     .then(() => {
@@ -96,18 +99,20 @@ app.get("/api/info", (_request, response) => {
   });
 });
 
-const unknownEndpoint = (request, response) => {
+const unknownEndpoint = (_request, response) => {
   response.status(404).send({ error: "unknown endpoint" });
 };
 
 // handler of requests with unknown endpoint
 app.use(unknownEndpoint);
 
-const errorHandler = (error, request, response, next) => {
+const errorHandler = (error, _request, response, next) => {
   console.error(error.message);
 
   if (error.name === "CastError") {
     return response.status(400).send({ error: "malformatted id" });
+  } else if (error.name === "ValidationError") {
+    return response.status(400).json({ error: error.message });
   }
 
   next(error);
