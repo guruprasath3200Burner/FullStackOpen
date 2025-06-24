@@ -75,7 +75,18 @@ const App = () => {
           msg: `Added ${newName}`,
           type: "success",
         });
+      })
+      .catch((error) => {
+        setErrorMessage({
+          msg: error.response.data.error,
+          type: "error",
+        });
       });
+    setTimeout(() => {
+      setErrorMessage({ msg: null, type: "error" });
+    }, 5000);
+    // Clear input fields after submission
+
     setNewName("");
     setNewNumber("");
   };
