@@ -1,32 +1,43 @@
 const blogRouter = require("express").Router();
 const { request } = require("http");
 const Blog = require("../models/blog");
-
-blogRouter.get("/", (request, response) => {
-  Blog.find({}).then((blogs) => {
+const User = require("../models/user");
+blogRouter.get("/", async (request, response, next) => {
+  try {
+    const blogs = await Blog.find({}).populate("user");
     response.json(blogs);
-  });
+  } catch (error) {
+    next(error);
+  }
 });
 
-blogRouter.post("/", async (request, response) => {
-  const { title, url, author = "Unknown", likes = 0 } = request.body;
+blogRouter.post("/", async (request, response, next) => {
+  const { title, author, url, likes } = request.body;
+  const fakeId = "685bcb6450206165fb1115b2";
+  const user = await User.findById(fakeId);
+  if (!user) {
+    return response.status(400).json({ error: "User not found" });
+  } else {
+    console.log("User found:", user.username);
+  }
 
   if (!title || !url) {
     return response.status(400).json({ error: "Title and URL are required" });
   }
-
   const blog = new Blog({
     title,
-    author,
+    author: author || "Unknown",
     url,
-    likes,
+    likes: likes ?? 0,
+    user: user._id,
   });
-
   try {
     const savedBlog = await blog.save();
+    user.blogs = user.blogs.concat(savedBlog._id);
+    await user.save();
     response.status(201).json(savedBlog);
   } catch (error) {
-    response.status(500).json({ error: "Database error" });
+    next(error);
   }
 });
 
