@@ -150,6 +150,43 @@ describe("4.12 blog list validation", () => {
   });
 });
 
+test("4.13 functionality to delete blog posts", async () => {
+  const blogsAtStart = (await api.get("/api/blogs")).body.length;
+  const blogtoDelete = starterData[0];
+  const blogs = await api.get("/api/blogs");
+  const blogToDelete = blogs.body.find(
+    (blog) =>
+      blog.title === blogtoDelete.title && blog.author === blogtoDelete.author
+  );
+
+  await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204);
+
+  const blogsAtEnd = (await api.get("/api/blogs")).body.length;
+  assert.strictEqual(blogsAtEnd, blogsAtStart - 1);
+});
+
+test("4.14 functionality to update blog posts", async () => {
+  const blogs = await api.get("/api/blogs");
+  const blogToUpdate = blogs.body[0];
+  const updatedBlog = {
+    ...blogToUpdate,
+    likes: blogToUpdate.likes + 1,
+  };
+  await api
+    .put(`/api/blogs/${blogToUpdate.id}`)
+    .send(updatedBlog)
+    .expect(200)
+    .expect("Content-Type", /application\/json/);
+  const blogsAtEnd = await api.get("/api/blogs");
+  const updatedBlogFromDb = blogsAtEnd.body.find(
+    (blog) => blog.id === blogToUpdate.id
+  );
+  assert.strictEqual(updatedBlogFromDb.likes, blogToUpdate.likes + 1);
+  assert.strictEqual(updatedBlogFromDb.title, blogToUpdate.title);
+  assert.strictEqual(updatedBlogFromDb.author, blogToUpdate.author);
+  assert.strictEqual(updatedBlogFromDb.url, blogToUpdate.url);
+});
+
 after(async () => {
   await mongoose.connection.close();
 });
