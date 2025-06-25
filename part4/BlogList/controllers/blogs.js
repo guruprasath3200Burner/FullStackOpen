@@ -1,31 +1,32 @@
-const express = require("express");
-const app = express();
-const cors = require("cors");
-const mongoose = require("mongoose");
-const config = require("./utils/config");
-const middleware = require("./utils/middleware");
-const blogsRouter = require("./controllers/blogs");
-const logger = require("./utils/logger");
+const blogRouter = require("express").Router();
+const Blog = require("../models/blog");
 
-mongoose
-  .connect(config.MONGODB_URI)
-  .then(() => {
-    logger.info("connected to MongoDB");
-  })
-  .catch((error) => {
-    logger.error("error connecting to MongoDB:", error.message);
+blogRouter.get("/", (request, response) => {
+  Blog.find({}).then((blogs) => {
+    response.json(blogs);
   });
-
-app.use(cors());
-app.use(express.json());
-app.use(middleware.requestLogger);
-
-app.get("/", (request, response) => {
-  response.send("<h1>Hello World!</h1>");
 });
 
-app.use("/api/blogs", blogsRouter);
-app.use(middleware.unknownEndpoint);
-app.use(middleware.errorHandler);
+blogRouter.post("/", async (request, response) => {
+  const { title, url, author = "Unknown", likes = 0 } = request.body;
 
-module.exports = app;
+  if (!title || !url) {
+    return response.status(400).json({ error: "Title and URL are required" });
+  }
+
+  const blog = new Blog({
+    title,
+    author,
+    url,
+    likes,
+  });
+
+  try {
+    const savedBlog = await blog.save();
+    response.status(201).json(savedBlog);
+  } catch (error) {
+    response.status(500).json({ error: "Database error" });
+  }
+});
+
+module.exports = blogRouter;
