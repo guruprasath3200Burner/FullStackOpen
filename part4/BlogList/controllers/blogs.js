@@ -1,7 +1,9 @@
 const blogRouter = require("express").Router();
 const { request } = require("http");
 const Blog = require("../models/blog");
+const jwt = require("jsonwebtoken");
 const User = require("../models/user");
+
 blogRouter.get("/", async (request, response, next) => {
   try {
     const blogs = await Blog.find({}).populate("user");
@@ -13,12 +15,16 @@ blogRouter.get("/", async (request, response, next) => {
 
 blogRouter.post("/", async (request, response, next) => {
   const { title, author, url, likes } = request.body;
-  const fakeId = "685bcb6450206165fb1115b2";
-  const user = await User.findById(fakeId);
+
+  const decodedToken = jwt.verify(request.token, process.env.SECRET);
+  if (!decodedToken.id) {
+    return response.status(401).json({ error: "token invalid" });
+  }
+
+  const user = await User.findById(request.user.id);
+
   if (!user) {
     return response.status(400).json({ error: "User not found" });
-  } else {
-    console.log("User found:", user.username);
   }
 
   if (!title || !url) {
@@ -40,18 +46,40 @@ blogRouter.post("/", async (request, response, next) => {
     next(error);
   }
 });
-
-blogRouter.delete("/:id", async (request, response) => {
-  const { id } = request.params;
+blogRouter.delete("/:id", async (request, response, next) => {
   try {
-    const result = await Blog.findByIdAndDelete(id);
-    if (result) {
-      response.status(204).end();
-    } else {
-      response.status(404).json({ error: "Blog not found" });
+    const { id } = request.params;
+    const decodedToken = jwt.verify(request.token, process.env.SECRET);
+    if (!decodedToken.id) {
+      return response.status(401).json({ error: "token invalid" });
     }
+
+    const user = await User.findById(decodedToken.id);
+    if (!user) {
+      return response.status(400).json({ error: "User not found" });
+    }
+
+    const blog = await Blog.findById(id);
+    if (!blog) {
+      return response.status(404).json({ error: "Blog not found" });
+    }
+
+    if (blog.user && blog.user.toString() !== user._id.toString()) {
+      return response
+        .status(403)
+        .json({ error: "You do not have permission to delete this blog" });
+    }
+
+    await Blog.findByIdAndDelete(id);
+
+    user.blogs = user.blogs.filter(
+      (blogId) => blogId.toString() !== id.toString()
+    );
+    await user.save();
+
+    response.status(204).end();
   } catch (error) {
-    response.status(500).json({ error: "Database error" });
+    next(error);
   }
 });
 

@@ -1,0 +1,10 @@
+POST http://localhost:3001/api/blogs
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Imd1cnUiLCJpZCI6IjY4NWJjYjY0NTAyMDYxNjVmYjExMTViMiIsImlhdCI6MTc1MDg1NTYxN30.noktjSd14hVpQiFV8qGHw2a19NmEoPOshH-lkJYXDG8
+
+{
+    "title": "Learning HTTP Requests",
+    "author": "Jane Smith",
+    "url": "http://example.com/learning-http",
+    "likes": 12
+}
