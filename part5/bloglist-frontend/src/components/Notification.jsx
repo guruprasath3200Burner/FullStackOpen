@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import React from "react";
 
 const notificationStyle = {
@@ -24,7 +25,7 @@ const styles = {
   },
 };
 
-const Notification = ({ message, type }) => {
+const Notification = React.forwardRef(({ message, type }, ref) => {
   if (!message) return null;
 
   const style = type === "success" ? styles.success : styles.error;
@@ -34,6 +35,8 @@ const Notification = ({ message, type }) => {
       {message}
     </div>
   );
-};
+});
+
+Notification.displayName = "Notification";
 
 export default Notification;

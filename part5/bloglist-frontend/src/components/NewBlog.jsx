@@ -4,15 +4,15 @@ const BlogForm = ({ createBlog }) => {
     <form onSubmit={createBlog}>
       <div>
         title
-        <input type="text" name="title" required />
+        <input id="blog-title" type="text" name="title" required />
       </div>
       <div>
         author
-        <input type="text" name="author" required />
+        <input id="blog-author" type="text" name="author" required />
       </div>
       <div>
         url
-        <input type="text" name="url" required />
+        <input id="blog-url" type="text" name="url" required />
       </div>
       <button type="submit">create</button>
     </form>
