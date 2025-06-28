@@ -192,4 +192,48 @@ describe("Blog app", function () {
       cy.contains("delete").click();
     });
   });
+
+  describe("5.23 Order By Likes", () => {
+    const sampleBlogs = [
+      {
+        title: `Sample Blog 1 ${Math.random()}`,
+        author: "Guru",
+        url: "www.sample1.com",
+        likes: Math.floor(Math.random() * 101),
+      },
+      {
+        title: `Sample Blog 2 ${Math.random()}`,
+        author: "Guru",
+        url: "www.sample2.com",
+        likes: Math.floor(Math.random() * 101),
+      },
+      {
+        title: `Sample Blog 3 ${Math.random()}`,
+        author: "Guru",
+        url: "www.sample3.com",
+        likes: Math.floor(Math.random() * 101),
+      },
+    ];
+    before(function () {
+      cy.request("POST", "http://localhost:5173/api/testing/reset");
+      cy.request("POST", "http://localhost:5173/api/users", user);
+      cy.login(user);
+      cy.visit("http://localhost:5173");
+      sampleBlogs.forEach((blog) => {
+        cy.createBlog(blog);
+      });
+    });
+    it("blogs are ordered by likes", function () {
+      cy.visit("http://localhost:5173");
+      cy.get(".blog").then((blogs) => {
+        const titles = Array.from(blogs).map(
+          (blog) => blog.querySelector(".blog-title").textContent
+        );
+        const expectedOrder = sampleBlogs
+          .sort((a, b) => b.likes - a.likes)
+          .map((blog) => blog.title);
+        expect(titles).to.deep.equal(expectedOrder);
+      });
+    });
+  });
 });
