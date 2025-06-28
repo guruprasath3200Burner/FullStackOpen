@@ -130,4 +130,66 @@ describe("Blog app", function () {
       cy.contains(`likes: ${SampleBlog.likes + 1}`);
     });
   });
+
+  describe("5.21 Users can delete a blog", () => {
+    before(function () {
+      cy.request("POST", "http://localhost:5173/api/testing/reset");
+      cy.request("POST", "http://localhost:5173/api/users", user);
+      cy.login(user);
+      cy.visit("http://localhost:5173");
+    });
+    const SampleBlog = {
+      title: `Sample Blog ${Math.random()}`,
+      author: "Guru",
+      url: "www.sample.com",
+      likes: 0,
+    };
+
+    it("a blog can be deleted", function () {
+      cy.createBlog(SampleBlog);
+      cy.visit("http://localhost:5173");
+      cy.contains(SampleBlog.title);
+      cy.contains("view").click();
+      cy.contains("delete").click();
+      cy.visit("http://localhost:5173");
+      cy.contains(SampleBlog.title).should("not.exist");
+    });
+  });
+
+  describe("5.22 Only users can delete a blog", () => {
+    const anotherUser = {
+      username: "anotherUser",
+      password: "1234",
+    };
+    before(function () {
+      cy.request("POST", "http://localhost:5173/api/testing/reset");
+      cy.request("POST", "http://localhost:5173/api/users", user);
+      cy.request("POST", "http://localhost:5173/api/users", anotherUser);
+      cy.login(user);
+      cy.visit("http://localhost:5173");
+    });
+    const SampleBlog = {
+      title: `Sample Blog ${Math.random()}`,
+      author: "Guru",
+      url: "www.sample.com",
+      likes: 0,
+    };
+    it("check for existance of blog", function () {
+      cy.createBlog(SampleBlog);
+      cy.visit("http://localhost:5173");
+      cy.contains(SampleBlog.title);
+      cy.contains("Logout").click();
+    });
+
+    it("Login via new account", () => {
+      cy.login(anotherUser);
+      cy.visit("http://localhost:5173");
+      cy.contains(SampleBlog.title);
+      // cy.contains("log in").click();
+      // cy.get("#username").type(anotherUser.username);
+      // cy.get("#password").type(anotherUser.password);
+      cy.contains("view").click();
+      cy.contains("delete").click();
+    });
+  });
 });
