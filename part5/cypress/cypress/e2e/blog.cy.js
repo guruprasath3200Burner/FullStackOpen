@@ -107,30 +107,27 @@ describe("Blog app", function () {
   });
 
   describe("5.20 Users can like a blog", () => {
+    before(function () {
+      cy.request("POST", "http://localhost:5173/api/testing/reset");
+      cy.request("POST", "http://localhost:5173/api/users", user);
+      cy.login(user);
+      cy.visit("http://localhost:5173");
+    });
     const SampleBlog = {
       title: `Sample Blog ${Math.random()}`,
       author: "Guru",
       url: "www.sample.com",
       likes: 0,
     };
-    beforeEach(() => {
-      cy.contains("log in").click();
-      cy.get("#username").type(user.username);
-      cy.get("#password").type(user.password);
-      cy.contains("login").click();
-    });
 
     it("a blog can be liked", function () {
       cy.createBlog(SampleBlog);
-      cy.request("POST", "http://localhost:5173/api/blogs", SampleBlog).then(
-        () => {
-          expect(response.status).to.eq(201);
-        }
-      );
+      cy.visit("http://localhost:5173");
       cy.contains(SampleBlog.title);
       cy.contains("view").click();
-      cy.get("#like-button").click();
-      cy.contains(`likes ${SampleBlog.likes + 1}`);
+      // cy.get("#like-button").click();
+      cy.contains("like").click();
+      cy.contains(`likes: ${SampleBlog.likes + 1}`);
     });
   });
 });
