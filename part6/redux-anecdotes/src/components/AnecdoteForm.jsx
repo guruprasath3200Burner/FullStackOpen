@@ -6,14 +6,7 @@ const AnecdoteForm = () => {
     event.preventDefault();
     const quote = event.target[0].value;
     event.target[0].value = "";
-    dispatch({
-      type: "ADD",
-      data: {
-        content: quote,
-        id: (100000 * Math.random()).toFixed(0),
-        votes: 0,
-      },
-    });
+    dispatch(addAnecdote(quote));
   };
 
   return (

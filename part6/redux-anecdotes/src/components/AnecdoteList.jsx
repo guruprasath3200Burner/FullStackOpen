@@ -1,9 +1,12 @@
 import { useSelector, useDispatch } from "react-redux";
+import { voteAnecdote } from "../reducers/anecdoteReducer";
 
 export default function AnecdoteList() {
-  const anecdotes = useSelector((state) => state.anecdotes);
-  const filter = useSelector((state) => state.filter);
   const dispatch = useDispatch();
+  const { anecdotes, filter } = useSelector((state) => ({
+    anecdotes: state.anecdotes,
+    filter: state.filter,
+  }));
 
   // sorting + filtering anecdotes
   const filteredAnecdotes = anecdotes
@@ -22,12 +25,9 @@ export default function AnecdoteList() {
           <div>
             has {anecdote.votes}
             <button
-              onClick={() =>
-                dispatch({
-                  type: "VOTE",
-                  data: { id: anecdote.id },
-                })
-              }
+              onClick={() => {
+                dispatch(voteAnecdote({ id: anecdote.id }));
+              }}
             >
               vote
             </button>
