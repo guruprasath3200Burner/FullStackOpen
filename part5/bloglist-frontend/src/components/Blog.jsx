@@ -34,8 +34,8 @@ const Blog = ({ blog, onDelete, onLike }) => {
   };
 
   return (
-    <div style={blogStyle}>
-      title: {blog.title}
+    <div style={blogStyle} className="blog" data-likes={likes}>
+      <span className="blog-title">{blog.title}</span>
       <br />
       author: {blog.author}
       <br />
