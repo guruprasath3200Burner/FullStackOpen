@@ -19,7 +19,7 @@ const asObject = (anecdote) => {
 
 const initialState = anecdotesAtStart.map(asObject);
 
-const reducer = (state = initialState, action) => {
+const anecdoteReducer = (state = initialState, action) => {
   if (action.type == "VOTE") {
     const id = action.data.id;
     return state.map((anecdote) =>
@@ -31,4 +31,4 @@ const reducer = (state = initialState, action) => {
   return state;
 };
 
-export default reducer;
+export default anecdoteReducer;
