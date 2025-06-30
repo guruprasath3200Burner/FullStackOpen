@@ -3,17 +3,13 @@ import AnecdoteForm from "./components/AnecdoteForm";
 import AnecdoteFilter from "./components/AnecdoteFilter";
 import Notification from "./components/Notification";
 import { useEffect } from "react";
-import anecdoteService from "./services/anecdotes";
+import { initializeAnecdotes } from "./reducers/anecdoteReducer";
 import { useDispatch } from "react-redux";
-import { loadAnecdote } from "./reducers/anecdoteReducer";
 
 const App = () => {
   const dispatch = useDispatch();
   useEffect(() => {
-    anecdoteService.getAll().then((anecdotes) => {
-      console.log("Anecdotes loaded:", anecdotes);
-      dispatch(loadAnecdote(anecdotes));
-    });
+    dispatch(initializeAnecdotes());
   });
   return (
     <div>
